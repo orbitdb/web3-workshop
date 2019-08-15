@@ -1,0 +1,59 @@
+audio {
+    border-radius: inherit;
+    vertical-align: middle;
+    width: 100%;
+}
+
+.playlist-item {
+  background: #F5F4EF;
+  margin: 1em 1em;
+  padding: 0.5em;
+}
+
+.playlist-items li {
+  height: 75px;
+  font-size: 24px;
+  line-height: 75px;
+  border-bottom: 3px solid darkslategray;
+  padding: 0.5rem;
+}
+
+.playlist-items li:nth-child(odd) {
+  background-color: #f1f1f1;
+ }
+
+.Playlist {
+  height: 500px;
+}
+
+.header {
+   font-size: 24px;
+   display: flex;
+   margin: 1em 0;
+   #title {
+     margin: 0 1.5em;
+     align-content: center;
+   }
+}
+
+.dragZone {
+  padding-top: 0.1em;
+  position: relative;
+  height: 100%;
+  background-color: skyblue;
+}
+
+.dragZone .message {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  display: none;
+}
+
+.dragZone:hover {
+  border: 3px dashed gray;
+}
+
+.dragZone:hover .message {
+  display: block;
+}
