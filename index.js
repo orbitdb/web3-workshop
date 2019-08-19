@@ -5,6 +5,7 @@ import './styles/index.scss'
 import IPFS from 'ipfs'
 import store from './PlaylistsStore'
 import Playlists from './Playlists'
+import Playlist from './Playlist'
 
 class App extends React.Component{
     async componentDidMount () {
@@ -29,6 +30,7 @@ class App extends React.Component{
           <pre>    .`   .`       ~ O R B I T   W A V E S ~      `.   '.</pre>
           <pre>_.-'     '._ <a href="https://github.com/orbitdb/web3-workshop/">github.com/orbitdb/web3-workshop/</a> _.'     '-._</pre>
           <Router>
+            <Route path="/orbitdb/:hash/:name" component={(props) => <Playlist {...props} store={store}/> }/>
             <Route exact path="/" component={(props) => <Playlists {...props} store={store}/> }/>
           </Router>
         </div>

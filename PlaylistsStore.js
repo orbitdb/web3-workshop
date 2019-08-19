@@ -4,6 +4,8 @@ import OrbitDB from 'orbit-db'
 
 class PlaylistsStore {
   @observable playlists = []
+  @observable isOnline = false
+  @observable currentPlaylist = {}
 
   constructor () {
     this.ipfs = null
@@ -17,6 +19,7 @@ class PlaylistsStore {
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
     await this.loadPlaylists()
+    this.isOnline = true
   }
 
   async loadPlaylists() {
@@ -48,6 +51,77 @@ class PlaylistsStore {
     //next we add it to our saved playlists feed
     const hash = await this.feed.add(p)
     return hash
+  }
+
+  async joinPlaylist (address) {
+    if (this.odb) {
+      const playlist = this.odb.stores[address] || await this.odb.open(address)
+      await playlist.load()
+      this.currentPlaylist = playlist
+    }
+  }
+
+  sendFiles (files, address) {
+    const promises = []
+    for (let i = 0; i < files.length; i++) {
+      promises.push(this._sendFile(files[i], address))
+    }
+    return Promise.all(promises)
+  }
+
+  async _sendFile (file, address) {
+    return new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onload = async event => {
+        const f = await this.addFile(address,
+          {
+            filename: file.name,
+            buffer: event.target.result,
+            meta: { mimeType: file.type, size: file.size }
+          })
+        resolve(f)
+      }
+      reader.readAsArrayBuffer(file)
+    })
+  }
+
+  async addFile (address, source) {
+    if (!source || !source.filename) {
+      throw new Error('Filename not specified')
+    }
+    const isBuffer = source.buffer && source.filename
+    const name = source.filename.split('/').pop()
+    const size = source.meta && source.meta.size ? source.meta.size : 0
+
+    const result = await this.ipfs.add(Buffer.from(source.buffer))
+    const hash = result[0].hash
+
+    console.log("upload", hash)
+
+    // Create a post
+    const data = {
+      content: hash,
+      meta: Object.assign(
+        {
+          from: this.odb.identity.id,
+          type: 'file',
+          ts: new Date().getTime()
+        },
+        { size, name },
+        source.meta || {}
+      )
+    }
+
+    return this.addToPlaylist(address, data)
+  }
+
+  async addToPlaylist (address, data) {
+    const feed = this.odb.stores[address] || await this.odb.open(address)
+    if (feed) {
+      const hash = await feed.add(data)
+      return feed.get(hash)
+    }
+    return
   }
 }
 
