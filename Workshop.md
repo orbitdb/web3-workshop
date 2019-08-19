@@ -2,9 +2,10 @@
 
 First, run `npm install`
 
-Then, to begin the webpack server run the command `npm start`.
+Then, to begin the webpack server run the command `npm start`. We'll keep this running over the course of the workshop; it'll automatically hotload any new edits to the server. To do more edits, open a new terminal window.
 
 We will be building a playlist app on OrbitDB to share music lists with friends.
+
 # Creating the store
 
 `$ touch PlaylistsStore.js`
@@ -13,6 +14,8 @@ Our app will consist of a single store to handle OrbitDB operations.
 We will be using `mobx` for state management and `orbit-db-identity-provider` to set up an identity for our OrbitDB instance.
 
 ```js
+// PlaylistsStore.js
+
 import { observable } from 'mobx'
 import Identities from 'orbit-db-identity-provider'
 import OrbitDB from 'orbit-db'
@@ -37,6 +40,8 @@ export default store
 Let's first set up our OrbitDB instance in `connect`. OrbitDB requires an `ipfs` instance and an `identity` to be passed into the `createInstance` method.
 
 ```js
+// PlaylistsStore.js
+
 async connect(ipfs, options = {}) {
   this.ipfs = ipfs
   const identity = options.identity || await Identities.createIdentity({ id: 'user' })
@@ -47,6 +52,8 @@ async connect(ipfs, options = {}) {
 in `index.js` let's create an IPFS instance with pubsub enabled once the App component has mounted:
 
 ```js
+// index.js
+
 async componentDidMount () {
   const ipfs = await IPFS.create({
     repo: './ipfs-repo',
@@ -69,7 +76,7 @@ async componentDidMount () {
 Our home page will list the names of our playlists. Let's begin by adding a `playlists` array in our store and create a `Playlists` component to render the contents.
 
 ```js
-PlaylistsStore.js
+// PlaylistsStore.js
 
 class PlaylistsStore {
   @observable playlists = ['playlist1', 'playlist1']
@@ -83,10 +90,11 @@ class PlaylistsStore {
 We will pass in the store as props to the Playlists component in `index.js`
 
 ```js
-index.js
+// index.js
 
 render(){
   return (
+    <div>
       <Router>
         <Route exact path="/" component={(props) => <Playlists {...props} store={store} /> }/>
       </Router>
@@ -96,10 +104,10 @@ render(){
 
 ```
 
-`Playlists` should be wrapped in `observer` to trigger rendering on updates:
+`Playlists` should be wrapped in `observer` to trigger rendering on updates. So, touch `Playlists.js`, and then:
 
 ```js
-Playlists.js
+// Playlists.js
 
 import React from 'react'
 import { observer } from 'mobx-react'
@@ -120,7 +128,7 @@ export default observer(Playlists)
 
 ```
 
-## Creating a feed to store playslists
+## Creating a feed to store playlists
 
 Next we will create a `feed` store to maintain our playlists. Let's put it in a method called `loadPlaylists ()` in `PlaylistsStore.js` and call it in our `connect` function.
 
@@ -128,6 +136,8 @@ We then iterate through all the entries in our feed with `feed.all` and add them
 Additionally we should listen for a `write` event from our feed indicated a new entry has been written.
 
 ```js
+// PlaylistsStore.js
+
 async connect(ipfs, options = {}) {
   //set up orbitdb
   this.ipfs = ipfs
@@ -154,6 +164,8 @@ async loadPlaylists() {
 To create a new playlist, let's add a `CreatePlaylist` component and add an input form to set the name.
 
 ```js
+// CreatePlaylist.js
+
 const CreatePlaylist = (props) => {
   return(
     <form onSubmit={() => console.log("clicked")}>
@@ -170,7 +182,7 @@ export default CreatePlaylist
 Add the CreatePlaylist component to the `Playlists` component:
 
 ```js
-Playlists.js
+// Playlists.js
 
 const Playlists = (props) => (
   <div style={{ maxWidth: "800px" }}>
@@ -188,6 +200,8 @@ const Playlists = (props) => (
 We need to keep track of the `playlistName` entered in the form input. To do that we can use React's `useState` hook and add `handleChange` and `handleSubmit`.
 
 ```js
+// CreatePlaylists.js
+
 const CreatePlaylist = (props) => {
   const [name, setName] = useState('')
 
@@ -218,7 +232,7 @@ Next we need to add a method in our `PlaylistsStore` to create a new playlist wi
 Each playlist will be a feed of its own, and we will add the name and address of the playlist to our feed of saved playlists.
 
 ```js
-PlaylistStore.js
+// PlaylistStore.js
 
 async createNewPlaylist(name) {
   const playlist = await this.odb.feed(name, { accessController: { type: 'orbitdb', write: [this.odb.identity.id]}})
@@ -235,7 +249,7 @@ async createNewPlaylist(name) {
 And call it in our `handleSubmit` method in `CreateNewPlaylist`
 
 ```js
-CreatePlaylist.js
+// CreatePlaylist.js
 
 async function handleSubmit (event) {
   event.preventDefault()
@@ -246,10 +260,10 @@ async function handleSubmit (event) {
 
 ```
 
-Finally we need to update our `playslists` array to read from the playlists feed in our `loadPlaylists` method.
+Finally we need to update our `playlists` array to read from the playlists feed in our `loadPlaylists` method.
 
 ```js
-PlaylistStore.js
+// PlaylistStore.js
 
 async loadPlaylists() {
   this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
