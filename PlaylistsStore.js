@@ -3,6 +3,8 @@ import Identities from 'orbit-db-identity-provider'
 import OrbitDB from 'orbit-db'
 
 class PlaylistsStore {
+  @observable playlists = ['playlist1']
+
   constructor () {
     this.ipfs = null
     this.odb = null
