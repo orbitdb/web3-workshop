@@ -124,6 +124,9 @@ export default observer(Playlists)
 
 Next we will create a `feed` store to maintain our playlists. Let's put it in a method called `loadPlaylists ()` in `PlaylistsStore.js` and call it in our `connect` function.
 
+We then iterate through all the entries in our feed with `feed.all` and add them to our `playlists` array to be rendered.
+Additionally we should listen for a `write` event from our feed indicated a new entry has been written.
+
 ```js
 async connect(ipfs, options = {}) {
   //set up orbitdb
@@ -135,5 +138,15 @@ async connect(ipfs, options = {}) {
 
 async loadPlaylists() {
   this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
+  await this.feed.load()
+  
+  const addToPlaylists = (entry) => {
+    //add entry to this.playlsits
+  }
+
+  this.feed.all.map(addToPlaylists)
+  this.feed.events.on('write', (hash, entry, heads) => {
+    addToPlaylists(entry)
+  })
 }
 ```
