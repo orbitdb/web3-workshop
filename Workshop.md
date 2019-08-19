@@ -63,3 +63,58 @@ async componentDidMount () {
   console.log("odb id:", store.odb.identity.id)
 }
 ```
+
+## Playlists Component
+
+Our home page will list the names of our playlists. Let's begin by adding a `playlists` array in our store and create a `Playlists` component to render the contents.
+
+```
+PlaylistsStore.js
+
+class PlaylistsStore {
+  @observable playlists = ['playlist1', 'playlist1']
+  constructor () {
+    this.ipfs = null
+    this.odb = null
+    this.feed = null
+  }
+```
+
+We will pass in the store as props to the Playlists component in `index.js`
+
+```
+index.js
+
+render(){
+  return (
+      <Router>
+        <Route exact path="/" component={(props) => <Playlists {...props} store={store} /> }/>
+      </Router>
+    </div>
+  )
+}
+
+```
+
+`Playlists` should be wrapped in `observer` to trigger rendering on updates:
+
+```
+Playlists.js
+
+import React from 'react'
+import { observer } from 'mobx-react'
+import { Link } from 'react-router-dom'
+
+const Playlists = (props) => ( 
+  <div>
+    <ul>
+    {props.store.playlists.map(playlist => {
+      <div>playlist</div>
+      })}
+    </ul>
+  </div>
+)
+
+export default observer(Playlists)
+
+```

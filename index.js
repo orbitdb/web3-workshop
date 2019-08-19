@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 import './styles/index.scss'
 import IPFS from 'ipfs'
 import store from './PlaylistsStore'
+import Playlists from './Playlists'
 
 class App extends React.Component{
     async componentDidMount () {
@@ -28,7 +29,7 @@ class App extends React.Component{
           <pre>    .`   .`       ~ O R B I T   W A V E S ~      `.   '.</pre>
           <pre>_.-'     '._ <a href="https://github.com/orbitdb/web3-workshop/">github.com/orbitdb/web3-workshop/</a> _.'     '-._</pre>
           <Router>
-            <Route exact path="/" component={(props) => <div></div> }/>
+            <Route exact path="/" component={(props) => <Playlists {...props} store={store}/> }/>
           </Router>
         </div>
       )
