@@ -3,7 +3,7 @@ import Identities from 'orbit-db-identity-provider'
 import OrbitDB from 'orbit-db'
 
 class PlaylistsStore {
-  @observable playlists = ['playlist1']
+  @observable playlists = []
 
   constructor () {
     this.ipfs = null
@@ -16,6 +16,21 @@ class PlaylistsStore {
     this.ipfs = ipfs
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
+    await this.loadPlaylists()
+  }
+
+  async loadPlaylists() {
+    this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
+    await this.feed.load()
+
+    const addToPlaylists = (entry) => {
+      //add entry to this.playlsits
+    }
+
+    this.feed.all.map(addToPlaylists)
+    this.feed.events.on('write', (hash, entry, heads) => {
+      addToPlaylists(entry)
+    })
   }
 }
 

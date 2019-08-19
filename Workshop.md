@@ -64,7 +64,8 @@ async componentDidMount () {
     config: {
       Addresses: {
         Swarm: ["/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star"] //rendezvous server
-      }
+      },
+      Bootstrap: ["/ip4/10.220.3.64/tcp/4002/ws/ipfs/QmTLJ3rHiqtcitBRhPv8enSHmhZahCF7heYQvKkWvBfGVq"] // connect workshop peers
     }
   })
   await store.connect(ipfs)
@@ -126,4 +127,36 @@ const Playlists = (props) => (
 )
 
 export default observer(Playlists)
+```
+
+## Creating a feed to store playlists
+
+Next we will create a `feed` store to maintain our playlists. Let's put it in a method called `loadPlaylists ()` in `PlaylistsStore.js` and call it in our `connect` function.
+
+We then iterate through all the entries in our feed with `feed.all` and add them to our `playlists` array to be rendered. Additionally we should listen for a `write` event from our feed indicated a new entry has been written.
+
+```js
+// PlaylistsStore.js
+
+async connect(ipfs, options = {}) {
+  //set up orbitdb
+  this.ipfs = ipfs
+  const identity = options.identity || await Identities.createIdentity({ id: 'user' })
+  this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
+  await this.loadPlaylists()
+}
+
+async loadPlaylists() {
+  this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
+  await this.feed.load()
+
+  const addToPlaylists = (entry) => {
+    //add entry to this.playlists
+  }
+
+  this.feed.all.map(addToPlaylists)
+  this.feed.events.on('write', (hash, entry, heads) => {
+    addToPlaylists(entry)
+  })
+}
 ```
