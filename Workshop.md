@@ -105,12 +105,13 @@ import React from 'react'
 import { observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 
-const Playlists = (props) => ( 
-  <div>
-    <ul>
-    {props.store.playlists.map(playlist => {
-      <div>playlist</div>
-      })}
+const Playlists = (props) => (
+  <div style={{max}}>
+    <ul className="playlist-items"> {
+          props.store.playlists.map(playlist => {
+            return (<li key={playlist}>{playlist}</li>)
+          }
+        )}
     </ul>
   </div>
 )
