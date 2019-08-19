@@ -72,7 +72,7 @@ Our home page will list the names of our playlists. Let's begin by adding a `pla
 PlaylistsStore.js
 
 class PlaylistsStore {
-  @observable playlists = ['playlist1', 'playlist1']
+  @observable playlists = ['playlist1', 'playlist2']
   constructor () {
     this.ipfs = null
     this.odb = null
@@ -87,6 +87,7 @@ index.js
 
 render(){
   return (
+    <div>
       <Router>
         <Route exact path="/" component={(props) => <Playlists {...props} store={store} /> }/>
       </Router>
