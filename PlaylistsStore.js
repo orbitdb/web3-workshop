@@ -16,6 +16,11 @@ class PlaylistsStore {
     this.ipfs = ipfs
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
+    await this.loadPlaylists()
+  }
+
+  async loadPlaylists() {
+    this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
   }
 }
 

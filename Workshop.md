@@ -119,3 +119,21 @@ const Playlists = (props) => (
 export default observer(Playlists)
 
 ```
+
+## Creating a feed to store playslists
+
+Next we will create a `feed` store to maintain our playlists. Let's put it in a method called `loadPlaylists ()` in `PlaylistsStore.js` and call it in our `connect` function.
+
+```js
+async connect(ipfs, options = {}) {
+  //set up orbitdb
+  this.ipfs = ipfs
+  const identity = options.identity || await Identities.createIdentity({ id: 'user' })
+  this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
+  await this.loadPlaylists()
+}
+
+async loadPlaylists() {
+  this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
+}
+```
