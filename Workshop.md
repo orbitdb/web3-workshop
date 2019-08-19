@@ -68,7 +68,7 @@ async componentDidMount () {
 
 Our home page will list the names of our playlists. Let's begin by adding a `playlists` array in our store and create a `Playlists` component to render the contents.
 
-```
+```js
 PlaylistsStore.js
 
 class PlaylistsStore {
@@ -82,7 +82,7 @@ class PlaylistsStore {
 
 We will pass in the store as props to the Playlists component in `index.js`
 
-```
+```js
 index.js
 
 render(){
@@ -98,7 +98,7 @@ render(){
 
 `Playlists` should be wrapped in `observer` to trigger rendering on updates:
 
-```
+```js
 Playlists.js
 
 import React from 'react'
