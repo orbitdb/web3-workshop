@@ -139,9 +139,129 @@ async connect(ipfs, options = {}) {
 async loadPlaylists() {
   this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
   await this.feed.load()
-  
+
   const addToPlaylists = (entry) => {
     //add entry to this.playlsits
+  }
+
+  this.feed.all.map(addToPlaylists)
+  this.feed.events.on('write', (hash, entry, heads) => {
+    addToPlaylists(entry)
+  })
+}
+```
+## Adding a playlist
+To create a new playlist, let's add a `CreatePlaylist` component and add an input form to set the name.
+
+```js
+const CreatePlaylist = (props) => {
+  return(
+    <form onSubmit={() => console.log("clicked")}>
+      <label htmlFor="playlistName">Enter a playlist name:</label><br />
+      <input type="text" placeholder="New playlist" onChange={() => {}} />
+      <input type="submit" value="Create" />
+    </form>
+  )
+}
+
+export default CreatePlaylist
+
+```
+Add the CreatePlaylist component to the `Playlists` component:
+
+```js
+Playlists.js
+
+const Playlists = (props) => (
+  <div style={{ maxWidth: "800px" }}>
+    <CreatePlaylist {...props}/> // create new playlist
+    <ul className="playlist-items"> {
+          props.store.playlists.map(playlist => {
+            return (<li key={playlist}>{playlist}</li>)
+          }
+        )}
+    </ul>
+  </div>
+)
+```
+
+We need to keep track of the `playlistName` entered in the form input. To do that we can use React's `useState` hook and add `handleChange` and `handleSubmit`.
+
+```js
+const CreatePlaylist = (props) => {
+  const [name, setName] = useState('')
+
+  async function handleSubmit (event) {
+    event.preventDefault()
+    console.log("Created playlist with name", name)
+    setName('')
+  }
+
+  async function handleChange(event) {
+    event.preventDefault();
+    setName(event.target.value)
+  }
+
+  return(
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="playlistName">Enter a playlist name:</label><br />
+      <input type="text" placeholder="New playlist" onChange={handleChange} />
+      <input type="submit" value="Create" />
+    </form>
+  )
+}
+
+export default CreatePlaylist
+```
+
+Next we need to add a method in our `PlaylistsStore` to create a new playlist with the name.
+Each playlist will be a feed of its own, and we will add the name and address of the playlist to our feed of saved playlists.
+
+```js
+PlaylistStore.js
+
+async createNewPlaylist(name) {
+  const playlist = await this.odb.feed(name, { accessController: { type: 'orbitdb', write: [this.odb.identity.id]}})
+  const p = {
+    name,
+    address: playlist.address.toString()
+  }
+
+  //next we add it to our saved playlists feed
+  const hash = await this.feed.add(p)
+  return hash
+}
+```
+And call it in our `handleSubmit` method in `CreateNewPlaylist`
+
+```js
+CreatePlaylist.js
+
+async function handleSubmit (event) {
+  event.preventDefault()
+  const playlist = await props.store.createNewPlaylist(name)
+  console.log("Created playlist", playlist)
+  setName('')
+}
+
+```
+
+Finally we need to update our `playslists` array to read from the playlists feed in our `loadPlaylists` method.
+
+```js
+PlaylistStore.js
+
+async loadPlaylists() {
+  this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
+  await this.feed.load()
+
+  const addToPlaylists = (entry) => {
+    //add entry to this.playlsits
+    this.playlists.push({
+      hash: entry.hash,
+      name: entry.payload.value.name,
+      address: entry.payload.value.address
+    })
   }
 
   this.feed.all.map(addToPlaylists)

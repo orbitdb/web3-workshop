@@ -25,12 +25,29 @@ class PlaylistsStore {
 
     const addToPlaylists = (entry) => {
       //add entry to this.playlsits
+      this.playlists.push({
+        hash: entry.hash,
+        name: entry.payload.value.name,
+        address: entry.payload.value.address
+      })
     }
 
     this.feed.all.map(addToPlaylists)
     this.feed.events.on('write', (hash, entry, heads) => {
       addToPlaylists(entry)
     })
+  }
+
+  async createNewPlaylist(name) {
+    const playlist = await this.odb.feed(name, { accessController: { type: 'orbitdb', write: [this.odb.identity.id]}})
+    const p = {
+      name,
+      address: playlist.address.toString()
+    }
+
+    //next we add it to our saved playlists feed
+    const hash = await this.feed.add(p)
+    return hash
   }
 }
 
