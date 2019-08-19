@@ -613,3 +613,114 @@ async function onDrop (event) {
    }
 }
 ```
+
+## Play a track
+
+Let's add the ability to play a track once clicked. We can create a method which accepts a stream and creates an audio element which plays the track. Our track is stored on IPFS, we can create a readable stream of the contents using `ipfs.catReadableStream(hash)`.
+
+```js
+// Playlist.js
+
+function createAudioElement(stream) {
+  const source = new MediaSource()
+
+  source.addEventListener('sourceopen', e => {
+    const buf = []
+    const sourceBuffer = source.sourceBuffers.length === 0 && source.addSourceBuffer('audio/mpeg')
+    if (sourceBuffer) {
+      sourceBuffer.addEventListener('updateend', () => {
+        if (buf.length > 0 && !sourceBuffer.updating) {
+          sourceBuffer.appendBuffer(buf.shift())
+        }
+      })
+
+      stream.on('data', data => {
+        if (!sourceBuffer.updating) {
+          if (buf.length > 0) {
+            sourceBuffer.appendBuffer(buf.shift())
+          } else {
+            sourceBuffer.appendBuffer(toArrayBuffer(data))
+          }
+        } else {
+          buf.push(toArrayBuffer(data))
+        }
+      })
+
+      stream.on('end', () => {
+        setTimeout(() => {
+          if (source.readyState === 'open' && !sourceBuffer.updating) source.endOfStream()
+        }, 100)
+      })
+
+      stream.on('error', e => console.error("herebeerror", e))
+    }
+  })
+
+  return <audio controls autoPlay={true} src={window.URL.createObjectURL(source)} onError={(e) => console.log("SOME ERROR", e)} />
+}
+
+const PlayAudio = ({ipfs, hash}) => {
+  const [content, setContent] = useState(null)
+  useEffect (() => {
+    const stream = ipfs.catReadableStream(hash)
+    const element = createAudioElement(stream)
+    setContent(element)
+  }, [hash])
+
+  return content ? content : <div>Loading...</div>
+}
+```
+
+We can use `useState` again to manage which track is playing, setting the initial value to `null`.
+
+```js
+// Playlist.js
+
+const Playlist = (props) => {
+  const [items, setItems] = useState([])
+  const [dragActive, setDragActive] = useState(false)
+  const [track, setTrack] = useState(null)
+  ...
+
+```
+
+We can edit our playlist component to render the audio player if `track` isn't `null`.
+
+```js
+// Playlist.js
+
+return (
+  <div className='Playlist'>
+    <Header title={props.match.params.name} />
+    <div className='dragZone'
+        onDragOver={event => {
+            event.preventDefault()
+            !dragActive && setDragActive(true)
+          }
+        }
+        onDrop={event => onDrop(event)}>
+        // add audio element if `track` playing
+        { track ? (<PlayAudio className="plyr" ipfs={props.store.ipfs} hash={track}/>) : null }
+        <ul> {
+          items.map(item => (
+            <PlaylistItem key={item.hash} name={item.payload.value.meta.name} hash={item.payload.value.content}/>
+          )
+        )}
+        </ul>
+      <h2 className="message">Drag audio files here to add them to the playlist</h2>
+    </div>
+  </div>
+)
+```
+
+Finally we need to set the track once an item is clicked. To do that we can edit the `onClick` function on the `PlaylistItem`:
+
+```js
+// Playlist.js
+
+const PlaylistItem = ({ name, hash }) => {
+  return (
+    <div className='playlist-item' onClick={() => setTrack(hash)}>{name}</div>
+  )
+}
+```

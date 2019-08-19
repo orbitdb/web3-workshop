@@ -2,7 +2,56 @@ import React, { useState, useEffect } from "react"
 import { observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import './styles/Playlist.scss'
-import { getDataTransferFiles } from './helper.js'
+import { getDataTransferFiles, toArrayBuffer, getFileBuffer } from './helper.js'
+
+function createAudioElement(stream) {
+  const source = new MediaSource()
+
+  source.addEventListener('sourceopen', e => {
+    const buf = []
+    const sourceBuffer = source.sourceBuffers.length === 0 && source.addSourceBuffer('audio/mpeg')
+    if (sourceBuffer) {
+      sourceBuffer.addEventListener('updateend', () => {
+        if (buf.length > 0 && !sourceBuffer.updating) {
+          sourceBuffer.appendBuffer(buf.shift())
+        }
+      })
+
+      stream.on('data', data => {
+        if (!sourceBuffer.updating) {
+          if (buf.length > 0) {
+            sourceBuffer.appendBuffer(buf.shift())
+          } else {
+            sourceBuffer.appendBuffer(toArrayBuffer(data))
+          }
+        } else {
+          buf.push(toArrayBuffer(data))
+        }
+      })
+
+      stream.on('end', () => {
+        setTimeout(() => {
+          if (source.readyState === 'open' && !sourceBuffer.updating) source.endOfStream()
+        }, 100)
+      })
+
+      stream.on('error', e => console.error("herebeerror", e))
+    }
+  })
+
+  return <audio controls autoPlay={true} src={window.URL.createObjectURL(source)} onError={(e) => console.log("SOME ERROR", e)} />
+}
+
+const PlayAudio = ({ipfs, hash}) => {
+  const [content, setContent] = useState(null)
+  useEffect (() => {
+    const stream = ipfs.catReadableStream(hash)
+    const element = createAudioElement(stream)
+    setContent(element)
+  }, [hash])
+
+  return content ? content : <div>Loading...</div>
+}
 
 const Header = ({ title }) => {
   return (
@@ -15,6 +64,7 @@ const Header = ({ title }) => {
 
 const Playlist = (props) => {
   const [items, setItems] = useState([])
+  const [track, setTrack] = useState(null)
   const [dragActive, setDragActive] = useState(false)
 
   let mounted = true
@@ -56,7 +106,7 @@ const Playlist = (props) => {
 
   const PlaylistItem = ({ name, hash }) => {
     return (
-      <div className='playlist-item' onClick={() => console.log(hash)}>{name}</div>
+      <div className='playlist-item' onClick={() => setTrack(hash)}>{name}</div>
     )
   }
 
@@ -70,6 +120,7 @@ const Playlist = (props) => {
             }
           }
           onDrop={event => onDrop(event)}>
+          {track ? (<PlayAudio className="plyr" ipfs={props.store.ipfs} hash={track}/>) : null}
           <ul> {
             items.map(item => (
               <PlaylistItem key={item.hash} name={item.payload.value.meta.name} hash={item.payload.value.content}/>
