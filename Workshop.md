@@ -1,3 +1,5 @@
 # Workshop Instructions
 
-To begin the webpack server run the command `npm start`.
+First, run `npm install`
+
+Then, to begin the webpack server run the command `npm start`.
