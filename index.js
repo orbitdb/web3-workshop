@@ -13,8 +13,15 @@ class App extends React.Component{
         preload: { "enabled": false },
         config: {
           Addresses: {
-            Swarm: ["/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star"]
-          }
+            Swarm: [
+              // Use IPFS dev webrtc signal server
+              '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
+              '/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
+              '/dns4/webrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/',
+              // Use local signal server
+              // '/ip4/0.0.0.0/tcp/9090/wss/p2p-webrtc-star',
+            ]
+          },
         }
       })
       await store.connect(ipfs)
