@@ -133,4 +133,3 @@ class PlaylistsStore {
 
 const store = window.store = new PlaylistsStore()
 export default store
-q
