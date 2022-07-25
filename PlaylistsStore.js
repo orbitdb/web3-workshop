@@ -30,8 +30,8 @@ class PlaylistsStore {
       //add entry to this.playlsits
     }
     
-    this.feed.events.on('ready', (a,b) => {
-      this.feed.all.map(this.addToPlaylists)
+    this.feed.events.on('ready', (address,elements) => {
+      elements.map(addToPlaylists)
     })
 
     this.feed.events.on('write', (hash, entry, heads) => {
