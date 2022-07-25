@@ -38,7 +38,7 @@ class PlaylistsStore {
     }
     
     this.feed.events.on('ready', (address,elements) => {
-      elements.map(addToPlaylists)
+      this.feed.all.map(addToPlaylists)
     })
 
     this.feed.events.on('write', (hash, entry, heads) => {
@@ -133,3 +133,4 @@ class PlaylistsStore {
 
 const store = window.store = new PlaylistsStore()
 export default store
+q
