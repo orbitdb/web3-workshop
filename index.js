@@ -2,13 +2,13 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 import './styles/index.scss'
-import IPFS from 'ipfs'
+import {create} from 'ipfs'
 import store from './PlaylistsStore'
 import Playlists from './Playlists'
 
 class App extends React.Component{
     async componentDidMount () {
-      const ipfs = await IPFS.create({
+      const ipfs = await create({
         repo: './ipfs-repo',
         EXPERIMENTAL: { pubsub: true },
         preload: { "enabled": false },
