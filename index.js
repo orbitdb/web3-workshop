@@ -14,12 +14,18 @@ class App extends React.Component{
         preload: { "enabled": false },
         config: {
           Addresses: {
-            Swarm: ["/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star"]
+            Swarm: [
+              // Use IPFS  webrtc signal server
+              '/dns6/ipfs.le-space.de/tcp/9091/wss/p2p-webrtc-star',
+              '/dns4/ipfs.le-space.de/tcp/9091/wss/p2p-webrtc-star',
+              // Use local signal server
+              // '/ip4/0.0.0.0/tcp/9090/wss/p2p-webrtc-star',
+            ]
           },
-          Bootstrap: ["/ip4/10.220.3.64/tcp/4002/ws/ipfs/QmTLJ3rHiqtcitBRhPv8enSHmhZahCF7heYQvKkWvBfGVq"] //connect workshop peers
         }
       })
       await store.connect(ipfs)
+      console.log("odb id:", store.odb.identity.id)
     }
 
     render(){
