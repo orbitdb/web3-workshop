@@ -100,7 +100,7 @@ class PlaylistsStore {
     const size = source.meta && source.meta.size ? source.meta.size : 0
 
     const result = await this.ipfs.add(Buffer.from(source.buffer))
-    const hash = result[0].hash
+    const hash = result.path;
 
     console.log("upload", hash)
 
