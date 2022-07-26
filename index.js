@@ -2,22 +2,21 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 import './styles/index.scss'
-import IPFS from 'ipfs'
+import {create} from 'ipfs'
 import store from './PlaylistsStore'
 
 class App extends React.Component{
     async componentDidMount () {
-      const ipfs = await IPFS.create({
+      const ipfs = await create({
         repo: './ipfs-repo',
         EXPERIMENTAL: { pubsub: true },
         preload: { "enabled": false },
         config: {
           Addresses: {
             Swarm: [
-              // Use IPFS dev webrtc signal server
-              '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
-              '/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/',
-              '/dns4/webrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/',
+              // Use IPFS  webrtc signal server
+              '/dns6/ipfs.le-space.de/tcp/9091/wss/p2p-webrtc-star',
+              '/dns4/ipfs.le-space.de/tcp/9091/wss/p2p-webrtc-star',
               // Use local signal server
               // '/ip4/0.0.0.0/tcp/9090/wss/p2p-webrtc-star',
             ]
@@ -25,6 +24,7 @@ class App extends React.Component{
         }
       })
       await store.connect(ipfs)
+      console.log("odb id:", store.odb.identity.id)
     }
 
     render(){
