@@ -18,13 +18,15 @@ class PlaylistsStore {
     this.ipfs = ipfs
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
+    const publicAccess = true
+    this.feed = await this.odb.open("playlist", 
+    { create: true, overwrite: true, localOnly: false, type: "feed",
+      accessController: { write: publicAccess ? ['*'] : [orbitdb.identity.id] } })
     await this.loadPlaylists()
     this.isOnline = true
   }
 
   async loadPlaylists() {
-    this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
-    await this.feed.load()
 
     const addToPlaylists = (entry) => {
       //add entry to this.playlsits
@@ -34,11 +36,15 @@ class PlaylistsStore {
         address: entry.payload.value.address
       })
     }
+    
+    this.feed.events.on('ready', (address,elements) => {
+      this.feed.all.map(addToPlaylists)
+    })
 
-    this.feed.all.map(addToPlaylists)
     this.feed.events.on('write', (hash, entry, heads) => {
       addToPlaylists(entry)
     })
+    await this.feed.load()
   }
 
   async createNewPlaylist(name) {
@@ -94,7 +100,7 @@ class PlaylistsStore {
     const size = source.meta && source.meta.size ? source.meta.size : 0
 
     const result = await this.ipfs.add(Buffer.from(source.buffer))
-    const hash = result[0].hash
+    const hash = result.path;
 
     console.log("upload", hash)
 
